@@ -101,12 +101,6 @@
             margin-bottom: 8px;
         }
 
-        .info-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1565c0;
-        }
-
         .button-group {
             display: flex;
             gap: 8px;
@@ -132,26 +126,94 @@
             transform: translateY(-2px);
         }
 
-        .attractions-list {
-            max-height: 300px;
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            flex: none;
+        }
+
+        .btn-danger {
+            border-color: #d32f2f;
+            color: #d32f2f;
+            background: #ffebee;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff4444;
+            background: #fff5f5;
+        }
+
+        .members-list {
+            max-height: 250px;
             overflow-y: auto;
         }
 
-        .attraction-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
+        .member-item {
+            background: white;
+            padding: 12px;
+            border: 1px solid #eee;
             border-radius: 6px;
-            transition: all 0.2s;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            color: #333;
             font-size: 13px;
         }
 
-        .attraction-item:hover {
-            background: #f5f5f5;
+        .member-distance {
+            font-size: 12px;
+            color: #1565c0;
+            margin-top: 4px;
         }
 
-        .attraction-item strong {
-            color: #ff4444;
+        .member-item button {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            transition: all 0.2s;
+        }
+
+        .member-item button:hover {
+            transform: scale(1.2);
         }
 
         .features {
@@ -171,65 +233,106 @@
             font-size: 11px;
             color: #666;
         }
+
+        .my-location-info {
+            background: #f0f8ff;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #ff4444;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .my-location-info strong {
+            color: #ff4444;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #856404;
+        }
+
+        .success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎡 롯데월드 매직 밴드</h1>
-            <p>실제 지도로 함께하는 순간을 스마트하게 연결</p>
+            <p>실시간 일행 위치 추적 및 어트랙션 안내</p>
         </div>
 
         <div class="content">
+            <div id="alert"></div>
+
             <div class="grid">
                 <!-- 실제 지도 -->
                 <div class="card">
                     <div class="card-title">🗺️ 실시간 롯데월드 맵</div>
                     <div id="map"></div>
                     <div class="button-group">
-                        <button class="btn" onclick="centerMap()">📍 중심 재설정</button>
-                        <button class="btn" onclick="myLocation()">🧭 내 위치</button>
+                        <button class="btn" onclick="centerMap()">📍 중심</button>
+                        <button class="btn" onclick="updateMyLocation()">🧭 내 위치</button>
+                        <button class="btn" onclick="toggleAutoUpdate()">🔄 자동 <span id="autoStatus">OFF</span></button>
                     </div>
                 </div>
 
-                <!-- 정보 패널 -->
+                <!-- 일행 관리 패널 -->
                 <div>
-                    <!-- 주요 어트랙션 -->
+                    <!-- 내 위치 정보 -->
                     <div class="card">
-                        <div class="card-title">🎢 주요 어트랙션</div>
-                        <div class="attractions-list" id="attractions"></div>
-                    </div>
-                </div>
-            </div>
+                        <div class="card-title">📍 내 위치</div>
+                        <div class="my-location-info">
+                            위도: <strong id="myLat">37.5105</strong><br>
+                            경도: <strong id="myLng">127.0979</strong>
+                        </div>
 
-            <!-- 위치 정보 -->
-            <div class="info-section">
-                <div class="info-label">📍 현재 위치</div>
-                <div style="font-size: 13px; color: #333; margin-bottom: 8px;">
-                    위도: <strong id="latValue">37.5105</strong> | 
-                    경도: <strong id="lngValue">127.0979</strong>
-                </div>
-                <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                    💡 지도를 드래그하거나 어트랙션을 클릭하세요
+                        <!-- 일행 추가 -->
+                        <div class="card-title" style="margin-top: 16px;">➕ 일행 추가</div>
+                        <div class="form-group">
+                            <label>일행 이름</label>
+                            <input type="text" id="memberName" placeholder="예: 엄마, 친구1" />
+                        </div>
+                        <button class="btn" onclick="addMember()">추가하기</button>
+
+                        <!-- 일행 목록 -->
+                        <div class="card-title" style="margin-top: 16px;">👥 일행 목록 (<span id="memberCount">0</span>)</div>
+                        <div class="members-list" id="membersList"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- 주요 기능 -->
             <div class="features">
                 <div style="font-weight: 700; color: #e65100; margin-bottom: 8px;">
-                    ✨ OpenStreetMap으로 실시간 위치 추적
+                    ✨ 실시간 일행 위치 추적
                 </div>
                 <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 4px 0;">✅ 실제 롯데월드 좌표 기반 (37.5105, 127.0979)</li>
-                    <li style="padding: 4px 0;">✅ 5개 주요 어트랙션 마커 표시</li>
-                    <li style="padding: 4px 0;">✅ GPS로 실시간 위치 추적</li>
-                    <li style="padding: 4px 0;">✅ 일행과의 거리 자동 계산</li>
+                    <li style="padding: 4px 0;">✅ 일행을 등록하고 실시간 위치 확인</li>
+                    <li style="padding: 4px 0;">✅ 내 위치 기반으로 일행과의 거리 자동 계산</li>
+                    <li style="padding: 4px 0;">✅ 자동 위치 업데이트 (위치 공유 설정)</li>
+                    <li style="padding: 4px 0;">✅ 어트랙션 정보 및 대기시간 안내</li>
                 </ul>
             </div>
         </div>
 
         <div class="footer">
-            <p>🎡 2026 롯데월드 매직 밴드 | NFC 연동 가능 | Powered by OpenStreetMap</p>
+            <p>🎡 2026 롯데월드 매직 밴드 | 실시간 일행 추적 | Powered by OpenStreetMap</p>
         </div>
     </div>
 
@@ -251,96 +354,184 @@
             { name: '스페이스 월드', lat: 37.5105, lng: 127.0990, wait: 60 }
         ];
 
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
         let map;
-        let centerMarker;
-        let markers = [];
-        let userMarker = null;
+        let myMarker;
+        let memberMarkers = {};
+        let members = {};
+        let myLocation = { lat: LOTTE_WORLD.lat, lng: LOTTE_WORLD.lng };
+        let autoUpdateInterval = null;
 
         function initMap() {
-            // Leaflet 지도 초기화
             map = L.map('map').setView([LOTTE_WORLD.lat, LOTTE_WORLD.lng], 16);
 
-            // OpenStreetMap 타일
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
 
-            // 중심 마커
-            centerMarker = L.marker([LOTTE_WORLD.lat, LOTTE_WORLD.lng], {
+            // 롯데월드 중심점
+            L.marker([LOTTE_WORLD.lat, LOTTE_WORLD.lng], {
                 title: '🎡 ' + LOTTE_WORLD.name
             }).addTo(map)
-            .bindPopup(`<strong>🎡 ${LOTTE_WORLD.name}</strong>`, { autoClose: true });
+            .bindPopup(`<strong>🎡 ${LOTTE_WORLD.name}</strong>`);
 
-            // 어트랙션 마커
-            attractions.forEach(attr => {
-                const marker = L.marker([attr.lat, attr.lng]).addTo(map)
-                    .bindPopup(`<strong>🎢 ${attr.name}</strong><br>⏱️ ${attr.wait}분`);
+            // 내 위치 마커
+            myMarker = L.circleMarker([myLocation.lat, myLocation.lng], {
+                radius: 12,
+                fillColor: '#ff4444',
+                color: '#fff',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map)
+            .bindPopup('<strong>📍 내 위치</strong>');
 
-                marker.on('click', function() {
-                    map.setView([attr.lat, attr.lng], 16);
-                });
-
-                markers.push(marker);
-            });
-
-            displayAttractions();
+            loadMembers();
         }
 
-        function displayAttractions() {
-            const list = document.getElementById('attractions');
-            list.innerHTML = attractions.map(attr => `
-                <div class="attraction-item" onclick="moveToAttraction(${attr.lat}, ${attr.lng})">
-                    <strong>${attr.name}</strong><br>
-                    ⏱️ 대기시간: ${attr.wait}분
-                </div>
-            `).join('');
-        }
-
-        function moveToAttraction(lat, lng) {
-            if (!map) return;
-            map.setView([lat, lng], 16);
-        }
-
-        function centerMap() {
-            if (!map) return;
-            map.setView([LOTTE_WORLD.lat, LOTTE_WORLD.lng], 16);
-        }
-
-        function myLocation() {
+        function updateMyLocation() {
             if (!navigator.geolocation) {
-                alert('위치 정보를 지원하지 않습니다');
+                showAlert('위치 정보를 지원하지 않습니다', 'error');
                 return;
             }
 
             navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
+                myLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
 
-                updateCoordinates(lat, lng);
+                document.getElementById('myLat').textContent = myLocation.lat.toFixed(4);
+                document.getElementById('myLng').textContent = myLocation.lng.toFixed(4);
 
-                if (userMarker) {
-                    map.removeLayer(userMarker);
-                }
+                myMarker.setLatLng([myLocation.lat, myLocation.lng]);
+                map.setView([myLocation.lat, myLocation.lng], 16);
 
-                userMarker = L.marker([lat, lng], {
-                    title: '📍 내 위치'
-                }).addTo(map)
-                .bindPopup('📍 내 위치');
-
-                map.setView([lat, lng], 16);
+                updateAllDistances();
+                showAlert('✅ 내 위치를 업데이트했습니다', 'success');
             }, error => {
-                alert('위치 허가가 필요합니다');
-                console.error(error);
+                showAlert('❌ 위치 허가가 필요합니다', 'error');
             });
         }
 
-        function updateCoordinates(lat, lng) {
-            document.getElementById('latValue').textContent = lat.toFixed(4);
-            document.getElementById('lngValue').textContent = lng.toFixed(4);
+        function addMember() {
+            const name = document.getElementById('memberName').value.trim();
+            
+            if (!name) {
+                showAlert('일행의 이름을 입력하세요', 'error');
+                return;
+            }
 
-            const distance = calculateDistance(lat, lng, LOTTE_WORLD.lat, LOTTE_WORLD.lng);
-            console.log(`롯데월드로부터 ${distance.toFixed(2)}km 떨어짐`);
+            if (members[name]) {
+                showAlert('이미 등록된 일행입니다', 'error');
+                return;
+            }
+
+            // GPS로 일행 위치 수집
+            if (!navigator.geolocation) {
+                showAlert('위치 정보를 지원하지 않습니다', 'error');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const id = Date.now().toString();
+                const colorIdx = Object.keys(members).length % colors.length;
+                
+                members[name] = {
+                    id: id,
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    color: colors[colorIdx]
+                };
+
+                saveMembers();
+                displayMembers();
+                addMemberMarker(name);
+                
+                document.getElementById('memberName').value = '';
+                showAlert(`✅ ${name}을(를) 추가했습니다`, 'success');
+            }, error => {
+                showAlert('❌ 위치 허가가 필요합니다', 'error');
+            });
+        }
+
+        function addMemberMarker(name) {
+            const member = members[name];
+            
+            const marker = L.circleMarker([member.lat, member.lng], {
+                radius: 10,
+                fillColor: member.color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map)
+            .bindPopup(`<strong>${name}</strong>`);
+
+            memberMarkers[name] = marker;
+        }
+
+        function removeMember(name) {
+            if (confirm(`${name}을(를) 삭제하시겠습니까?`)) {
+                delete members[name];
+                
+                if (memberMarkers[name]) {
+                    map.removeLayer(memberMarkers[name]);
+                    delete memberMarkers[name];
+                }
+
+                saveMembers();
+                displayMembers();
+                showAlert(`✅ ${name}을(를) 삭제했습니다`, 'success');
+            }
+        }
+
+        function displayMembers() {
+            const list = document.getElementById('membersList');
+            const count = document.getElementById('memberCount');
+            
+            count.textContent = Object.keys(members).length;
+
+            if (Object.keys(members).length === 0) {
+                list.innerHTML = '<p style="color: #999; font-size: 12px; padding: 12px;">등록된 일행이 없습니다</p>';
+                return;
+            }
+
+            list.innerHTML = Object.entries(members).map(([name, data]) => {
+                const distance = calculateDistance(myLocation.lat, myLocation.lng, data.lat, data.lng);
+                
+                return `
+                    <div class="member-item">
+                        <div class="member-info">
+                            <div class="member-name" style="color: ${data.color};">● ${name}</div>
+                            <div class="member-distance">거리: ${distance.toFixed(2)}km</div>
+                        </div>
+                        <button onclick="removeMember('${name}')" title="삭제">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateAllDistances() {
+            displayMembers();
+        }
+
+        function saveMembers() {
+            localStorage.setItem('members', JSON.stringify(members));
+        }
+
+        function loadMembers() {
+            const saved = localStorage.getItem('members');
+            if (saved) {
+                members = JSON.parse(saved);
+                displayMembers();
+                
+                // 기존 마커들 추가
+                Object.keys(members).forEach(name => {
+                    addMemberMarker(name);
+                });
+            }
         }
 
         function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -353,6 +544,37 @@
                 Math.sin(dLng / 2) * Math.sin(dLng / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
+        }
+
+        function centerMap() {
+            map.setView([myLocation.lat, myLocation.lng], 16);
+        }
+
+        function toggleAutoUpdate() {
+            const btn = document.getElementById('autoStatus').parentElement;
+            const status = document.getElementById('autoStatus');
+
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateInterval = null;
+                status.textContent = 'OFF';
+                status.parentElement.style.background = '#fff5f5';
+                showAlert('자동 위치 업데이트를 중지했습니다', 'success');
+            } else {
+                autoUpdateInterval = setInterval(updateMyLocation, 10000); // 10초마다
+                status.textContent = 'ON';
+                status.parentElement.style.background = '#d4edda';
+                updateMyLocation();
+                showAlert('✅ 자동 위치 업데이트를 시작했습니다 (10초 간격)', 'success');
+            }
+        }
+
+        function showAlert(msg, type = 'info') {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.innerHTML = `<div class="alert ${type}">${msg}</div>`;
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 3000);
         }
 
         // 로드 시 초기화
