@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
             min-height: 100vh;
             padding: 20px;
@@ -83,22 +83,7 @@
             height: 400px;
             border-radius: 8px;
             border: 2px solid #ddd;
-        }
-
-        .alert {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            color: #856404;
-            font-size: 13px;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-            animation: slideDown 0.3s ease-out;
+            background: #e5e3df;
         }
 
         .info-section {
@@ -178,21 +163,6 @@
             font-size: 13px;
         }
 
-        .features strong {
-            color: #e65100;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .footer {
             background: #f5f5f5;
             padding: 16px;
@@ -211,10 +181,6 @@
         </div>
 
         <div class="content">
-            <div class="alert" id="alert">
-                <span id="alertMsg"></span>
-            </div>
-
             <div class="grid">
                 <!-- 실제 지도 -->
                 <div class="card">
@@ -244,18 +210,18 @@
                     경도: <strong id="lngValue">127.0979</strong>
                 </div>
                 <div style="font-size: 12px; color: #666; margin-top: 8px;">
-                    💡 Tip: 마크를 드래그해서 위치를 변경할 수 있습니다
+                    💡 지도에서 드래그하거나 버튼으로 조작할 수 있습니다
                 </div>
             </div>
 
             <!-- 주요 기능 -->
             <div class="features">
                 <div style="font-weight: 700; color: #e65100; margin-bottom: 8px;">
-                    ✨ Kakao Maps로 실시간 위치 추적
+                    ✨ 실시간 위치 추적 및 어트랙션 안내
                 </div>
                 <ul style="list-style: none; padding: 0;">
                     <li style="padding: 4px 0;">✅ 실제 롯데월드 좌표 기반 (37.5105, 127.0979)</li>
-                    <li style="padding: 4px 0;">✅ 어트랙션 마커 자동 표시</li>
+                    <li style="padding: 4px 0;">✅ 5개 주요 어트랙션 마커 표시</li>
                     <li style="padding: 4px 0;">✅ GPS로 실시간 위치 추적</li>
                     <li style="padding: 4px 0;">✅ 일행과의 거리 자동 계산</li>
                 </ul>
@@ -263,22 +229,20 @@
         </div>
 
         <div class="footer">
-            <p>🎡 Powered by Kakao Maps API | 2026 롯데월드 매직 밴드</p>
+            <p>🎡 2026 롯데월드 매직 밴드 | NFC 연동 가능</p>
         </div>
     </div>
 
-    <!-- Kakao Maps SDK -->
-    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=56ea5aad1f4982769925786b12eea9c0&libraries=services"></script>
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBe7e2Tf-0ZZD8b-9OqWxB5rKFEv-Sg5Vk"></script>
     
     <script>
-        // 롯데월드 좌표
         const LOTTE_WORLD = {
             lat: 37.5105,
             lng: 127.0979,
             name: '롯데월드 어드벤처'
         };
 
-        // 주요 어트랙션들
         const attractions = [
             { name: '버터플라이 파라다이스', lat: 37.5100, lng: 127.0970, wait: 45 },
             { name: '매직하우스', lat: 37.5110, lng: 127.0985, wait: 30 },
@@ -288,71 +252,48 @@
         ];
 
         let map;
+        let centerMarker;
         let markers = [];
         let userMarker = null;
 
-        // 맵 초기화
         function initMap() {
-            const mapContainer = document.getElementById('map');
-            const mapOption = {
-                center: new kakao.maps.LatLng(LOTTE_WORLD.lat, LOTTE_WORLD.lng),
-                level: 4,
-                draggable: true,
-                scrollwheel: true
+            const mapOptions = {
+                zoom: 16,
+                center: { lat: LOTTE_WORLD.lat, lng: LOTTE_WORLD.lng },
+                mapTypeId: 'roadmap'
             };
 
-            map = new kakao.maps.Map(mapContainer, mapOption);
+            map = new google.maps.Map(document.getElementById('map'), mapOptions);
 
-            // 롯데월드 중심 마커
-            addMarker(LOTTE_WORLD.lat, LOTTE_WORLD.lng, '🎡 ' + LOTTE_WORLD.name, true);
+            // 중심 마커
+            centerMarker = new google.maps.Marker({
+                position: { lat: LOTTE_WORLD.lat, lng: LOTTE_WORLD.lng },
+                map: map,
+                title: '🎡 ' + LOTTE_WORLD.name,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+            });
 
-            // 어트랙션 마커 추가
+            // 어트랙션 마커
             attractions.forEach(attr => {
-                addMarker(attr.lat, attr.lng, `🎢 ${attr.name}\n⏱️ ${attr.wait}분`);
-            });
-
-            // 어트랙션 리스트 표시
-            displayAttractions();
-        }
-
-        function addMarker(lat, lng, title, isMain = false) {
-            const markerPosition = new kakao.maps.LatLng(lat, lng);
-            
-            const markerImage = new kakao.maps.MarkerImage(
-                isMain ? 
-                'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png' :
-                'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerA.png',
-                new kakao.maps.Size(24, 35),
-                { offset: new kakao.maps.Point(12, 35) }
-            );
-
-            const marker = new kakao.maps.Marker({
-                position: markerPosition,
-                image: markerImage,
-                title: title,
-                draggable: true
-            });
-
-            marker.setMap(map);
-
-            // 마커 클릭 시 정보 표시
-            kakao.maps.event.addListener(marker, 'click', () => {
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: `<div style="padding:8px;font-size:12px;">${title}</div>`
+                const marker = new google.maps.Marker({
+                    position: { lat: attr.lat, lng: attr.lng },
+                    map: map,
+                    title: attr.name
                 });
-                infowindow.open(map, marker);
 
-                // 3초 후 자동 닫기
-                setTimeout(() => infowindow.close(), 3000);
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<div style="padding:8px;"><strong>${attr.name}</strong><br>⏱️ ${attr.wait}분</div>`
+                });
+
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                    setTimeout(() => infoWindow.close(), 3000);
+                });
+
+                markers.push(marker);
             });
 
-            // 드래그 시 좌표 업데이트
-            kakao.maps.event.addListener(marker, 'dragend', () => {
-                const pos = marker.getPosition();
-                updateCoordinates(pos.getLat(), pos.getLng());
-            });
-
-            markers.push(marker);
+            displayAttractions();
         }
 
         function displayAttractions() {
@@ -366,62 +307,57 @@
         }
 
         function moveToAttraction(lat, lng) {
-            const level = map.getLevel();
-            map.setCenter(new kakao.maps.LatLng(lat, lng));
-            map.setLevel(4);
+            if (!map) return;
+            map.setCenter({ lat, lng });
+            map.setZoom(16);
         }
 
         function centerMap() {
-            map.setCenter(new kakao.maps.LatLng(LOTTE_WORLD.lat, LOTTE_WORLD.lng));
-            map.setLevel(4);
+            if (!map) return;
+            map.setCenter({ lat: LOTTE_WORLD.lat, lng: LOTTE_WORLD.lng });
+            map.setZoom(16);
         }
 
         function myLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    updateCoordinates(lat, lng);
-
-                    // 사용자 위치 마커
-                    if (userMarker) {
-                        userMarker.setMap(null);
-                    }
-
-                    const userMarkerImage = new kakao.maps.MarkerImage(
-                        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-                        new kakao.maps.Size(24, 35),
-                        { offset: new kakao.maps.Point(12, 35) }
-                    );
-
-                    userMarker = new kakao.maps.Marker({
-                        position: new kakao.maps.LatLng(lat, lng),
-                        image: userMarkerImage,
-                        title: '📍 내 위치'
-                    });
-
-                    userMarker.setMap(map);
-                    map.setCenter(new kakao.maps.LatLng(lat, lng));
-
-                    showAlert('✅ 현재 위치를 반영했습니다!');
-                }, error => {
-                    showAlert('❌ 위치 허가가 필요합니다');
-                });
+            if (!navigator.geolocation) {
+                alert('위치 정보를 지원하지 않습니다');
+                return;
             }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                updateCoordinates(lat, lng);
+
+                if (userMarker) {
+                    userMarker.setMap(null);
+                }
+
+                userMarker = new google.maps.Marker({
+                    position: { lat, lng },
+                    map: map,
+                    title: '📍 내 위치',
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                });
+
+                map.setCenter({ lat, lng });
+                map.setZoom(16);
+            }, error => {
+                alert('위치 허가가 필요합니다');
+            });
         }
 
         function updateCoordinates(lat, lng) {
             document.getElementById('latValue').textContent = lat.toFixed(4);
             document.getElementById('lngValue').textContent = lng.toFixed(4);
 
-            // 롯데월드와의 거리 계산 (km 단위)
             const distance = calculateDistance(lat, lng, LOTTE_WORLD.lat, LOTTE_WORLD.lng);
             console.log(`롯데월드로부터 ${distance.toFixed(2)}km 떨어짐`);
         }
 
         function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371; // 지구 반지름 (km)
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLng = (lng2 - lng1) * Math.PI / 180;
             const a = 
@@ -432,14 +368,7 @@
             return R * c;
         }
 
-        function showAlert(msg) {
-            const alert = document.getElementById('alert');
-            document.getElementById('alertMsg').textContent = msg;
-            alert.classList.add('show');
-            setTimeout(() => alert.classList.remove('show'), 3000);
-        }
-
-        // 페이지 로드 시 맵 초기화
+        // 로드 시 초기화
         window.addEventListener('load', initMap);
     </script>
 </body>
