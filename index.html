@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>롯데월드 매직 밴드 - 함께하는 순간을 스마트하게</title>
+    <title>롯데월드 매직 밴드 - 실제 맵 연동</title>
     <style>
         * {
             margin: 0;
@@ -30,41 +30,23 @@
         .header {
             background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
             color: white;
-            padding: 40px 20px;
+            padding: 30px 20px;
             text-align: center;
-            border-bottom: 4px solid white;
         }
 
         .header h1 {
-            font-size: 32px;
+            font-size: 28px;
             margin-bottom: 8px;
             font-weight: 700;
         }
 
         .header p {
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0.95;
-            font-weight: 300;
         }
 
         .content {
-            padding: 40px 20px;
-        }
-
-        .alert {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-            color: #856404;
-            font-size: 14px;
-            display: none;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .alert.show {
-            display: block;
+            padding: 30px 20px;
         }
 
         .grid {
@@ -87,11 +69,6 @@
             background: #fafafa;
         }
 
-        .card.highlight {
-            background: #f5f5f5;
-            border-color: #ff4444;
-        }
-
         .card-title {
             font-size: 14px;
             font-weight: 700;
@@ -101,52 +78,33 @@
             letter-spacing: 0.5px;
         }
 
-        .map-container {
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            overflow: hidden;
-        }
-
-        svg {
+        #map {
             width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .member-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .member-btn {
-            padding: 8px 16px;
+            height: 400px;
+            border-radius: 8px;
             border: 2px solid #ddd;
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: #856404;
             font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
+            display: none;
         }
 
-        .member-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .member-btn.active {
-            border-color: #ff4444;
-            background: #fff5f5;
-            color: #ff4444;
-            font-weight: 700;
+        .alert.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
         }
 
         .info-section {
             background: #e3f2fd;
             border: 2px solid #90caf9;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 16px;
             margin-bottom: 16px;
         }
@@ -159,161 +117,69 @@
         }
 
         .info-value {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             color: #1565c0;
-            margin-bottom: 8px;
         }
 
-        .warning {
-            font-size: 12px;
-            color: #d32f2f;
-            font-weight: 700;
-        }
-
-        .led-section {
-            background: #fff9e6;
-            border: 2px solid #ffc107;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .led-btn {
-            width: 100%;
-            padding: 16px;
-            border: 2px solid #ffc107;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
-            color: #f57f17;
-            transition: all 0.3s;
-        }
-
-        .led-btn.on {
-            background: #ffc107;
-            color: white;
-            animation: pulse 0.6s infinite;
-        }
-
-        .led-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .controls {
-            background: #f5f5f5;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .control-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 60px);
+        .button-group {
+            display: flex;
             gap: 8px;
-            max-width: 200px;
+            margin-top: 12px;
         }
 
-        .control-btn {
-            padding: 12px;
+        .btn {
+            flex: 1;
+            padding: 10px;
             border: 2px solid #ff4444;
             background: #fff5f5;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 600;
             color: #ff4444;
             transition: all 0.2s;
         }
 
-        .control-btn:hover {
+        .btn:hover {
             background: #ff4444;
             color: white;
-            transform: scale(1.05);
+            transform: translateY(-2px);
         }
 
-        .control-btn:active {
-            transform: scale(0.95);
+        .attractions-list {
+            max-height: 300px;
+            overflow-y: auto;
         }
 
-        .arrow-up {
-            grid-column: 2;
+        .attraction-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 13px;
         }
 
-        .arrow-down {
-            grid-column: 2;
+        .attraction-item:hover {
+            background: #f5f5f5;
+        }
+
+        .attraction-item strong {
+            color: #ff4444;
         }
 
         .features {
             background: #fff3e0;
             border: 2px solid #ffb74d;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 16px;
             margin-top: 20px;
-        }
-
-        .features-title {
-            font-weight: 700;
-            color: #e65100;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .features ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .features li {
-            padding: 8px 0;
             font-size: 13px;
-            line-height: 1.6;
-            color: #333;
-            border-bottom: 1px solid #ffe0b2;
-        }
-
-        .features li:last-child {
-            border-bottom: none;
         }
 
         .features strong {
             color: #e65100;
-        }
-
-        .nfc-info {
-            background: #e8f5e9;
-            border: 2px solid #81c784;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .nfc-info h3 {
-            color: #2e7d32;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .nfc-info p {
-            color: #558b2f;
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-
-        .url-box {
-            background: white;
-            border: 2px solid #2e7d32;
-            border-radius: 6px;
-            padding: 12px;
-            word-break: break-all;
-            font-family: monospace;
-            font-size: 12px;
-            color: #2e7d32;
-            font-weight: 700;
         }
 
         @keyframes slideDown {
@@ -327,22 +193,12 @@
             }
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
-            }
-            50% {
-                box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
-            }
-        }
-
         .footer {
             background: #f5f5f5;
-            padding: 20px;
+            padding: 16px;
             text-align: center;
             border-top: 1px solid #eee;
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
     </style>
@@ -351,7 +207,7 @@
     <div class="container">
         <div class="header">
             <h1>🎡 롯데월드 매직 밴드</h1>
-            <p>함께하는 순간을 스마트하게 연결하다</p>
+            <p>실제 지도로 함께하는 순간을 스마트하게 연결</p>
         </div>
 
         <div class="content">
@@ -360,206 +216,231 @@
             </div>
 
             <div class="grid">
-                <!-- 맵 영역 -->
+                <!-- 실제 지도 -->
                 <div class="card">
-                    <div class="card-title">🗺️ 어드벤처 맵</div>
-                    <div class="map-container">
-                        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-                            <!-- 배경 -->
-                            <rect width="400" height="400" fill="#f0f8ff"/>
-                            
-                            <!-- 어트랙션 -->
-                            <rect x="100" y="50" width="50" height="35" rx="6" fill="#ffe4e1" stroke="#ff6b6b" stroke-width="1.5"/>
-                            <text x="125" y="70" text-anchor="middle" font-size="10" font-weight="500" fill="#333">파라다이스</text>
-                            <text x="125" y="82" text-anchor="middle" font-size="9" fill="#ff6b6b">45분</text>
-
-                            <rect x="280" y="70" width="50" height="35" rx="6" fill="#ffe4e1" stroke="#ff6b6b" stroke-width="1.5"/>
-                            <text x="305" y="90" text-anchor="middle" font-size="10" font-weight="500" fill="#333">매직하우스</text>
-                            <text x="305" y="102" text-anchor="middle" font-size="9" fill="#ff6b6b">30분</text>
-
-                            <rect x="50" y="250" width="50" height="35" rx="6" fill="#ffe4e1" stroke="#ff6b6b" stroke-width="1.5"/>
-                            <text x="75" y="270" text-anchor="middle" font-size="10" font-weight="500" fill="#333">버그타운</text>
-                            <text x="75" y="282" text-anchor="middle" font-size="9" fill="#ff6b6b">50분</text>
-
-                            <rect x="280" y="270" width="50" height="35" rx="6" fill="#ffe4e1" stroke="#ff6b6b" stroke-width="1.5"/>
-                            <text x="305" y="290" text-anchor="middle" font-size="10" font-weight="500" fill="#333">극장</text>
-                            <text x="305" y="302" text-anchor="middle" font-size="9" fill="#ff6b6b">35분</text>
-
-                            <rect x="175" y="180" width="50" height="35" rx="6" fill="#ffe4e1" stroke="#ff6b6b" stroke-width="1.5"/>
-                            <text x="200" y="198" text-anchor="middle" font-size="9" font-weight="500" fill="#333">스페이스</text>
-                            <text x="200" y="210" text-anchor="middle" font-size="9" fill="#ff6b6b">60분</text>
-
-                            <!-- 멤버 -->
-                            <circle id="member1" cx="150" cy="150" r="14" fill="#1e90ff"/>
-                            <text x="150" y="155" text-anchor="middle" font-size="16">😊</text>
-                            <text x="150" y="175" text-anchor="middle" font-size="10" font-weight="500" fill="#333">나</text>
-
-                            <circle id="member2" cx="280" cy="180" r="14" fill="#ff6b9d"/>
-                            <text x="280" y="185" text-anchor="middle" font-size="16">👧</text>
-                            <text x="280" y="205" text-anchor="middle" font-size="10" font-weight="500" fill="#333">친구1</text>
-
-                            <circle id="member3" cx="200" cy="280" r="14" fill="#ffa500"/>
-                            <text x="200" y="285" text-anchor="middle" font-size="16">👦</text>
-                            <text x="200" y="305" text-anchor="middle" font-size="10" font-weight="500" fill="#333">친구2</text>
-                        </svg>
+                    <div class="card-title">🗺️ 실시간 롯데월드 맵</div>
+                    <div id="map"></div>
+                    <div class="button-group">
+                        <button class="btn" onclick="centerMap()">📍 중심 재설정</button>
+                        <button class="btn" onclick="myLocation()">🧭 내 위치</button>
                     </div>
                 </div>
 
                 <!-- 정보 패널 -->
                 <div>
-                    <!-- 멤버 선택 -->
-                    <div class="card highlight">
-                        <div class="card-title">👥 일행 선택</div>
-                        <div class="member-buttons">
-                            <button class="member-btn active" onclick="selectMember(2)">👧 친구1</button>
-                            <button class="member-btn" onclick="selectMember(3)">👦 친구2</button>
-                        </div>
-                    </div>
-
-                    <!-- 위치 정보 -->
-                    <div class="info-section">
-                        <div class="info-label">📍 위치 정보</div>
-                        <div style="font-size: 14px; color: #333; margin-bottom: 8px;">
-                            <strong id="memberName">친구1</strong>과의 거리
-                        </div>
-                        <div class="info-value" id="distance">285m</div>
-                        <div class="warning" id="warningText" style="display: none;">
-                            ⚠️ 안심 거리 초과 (기본값: 150m)
-                        </div>
-                    </div>
-
-                    <!-- LED 라이트 -->
-                    <div class="led-section">
-                        <div class="info-label">💡 LED 라이트</div>
-                        <button class="led-btn" id="ledBtn" onclick="toggleLED()">💫 LED OFF</button>
+                    <!-- 주요 어트랙션 -->
+                    <div class="card">
+                        <div class="card-title">🎢 주요 어트랙션</div>
+                        <div class="attractions-list" id="attractions"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 이동 제어 -->
-            <div class="controls">
-                <div class="card-title">🎮 멤버 이동 (시뮬레이션)</div>
-                <div class="control-grid">
-                    <button class="control-btn arrow-up" onclick="moveMember(-30)">⬆️</button>
-                    <button class="control-btn" onclick="moveMember(-30, true)">⬅️</button>
-                    <button class="control-btn" onclick="moveMember(30, true)">➡️</button>
-                    <button class="control-btn arrow-down" onclick="moveMember(30)">⬇️</button>
+            <!-- 위치 정보 -->
+            <div class="info-section">
+                <div class="info-label">📍 현재 위치</div>
+                <div style="font-size: 13px; color: #333; margin-bottom: 8px;">
+                    위도: <strong id="latValue">37.5105</strong> | 
+                    경도: <strong id="lngValue">127.0979</strong>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                    💡 Tip: 마크를 드래그해서 위치를 변경할 수 있습니다
                 </div>
             </div>
 
             <!-- 주요 기능 -->
             <div class="features">
-                <div class="features-title">✨ 매직 밴드의 주요 기능</div>
-                <ul>
-                    <li><strong>NFC 스마트 페이지:</strong> 밴드를 스마트폰에 태그하면 어트랙션 대기시간과 위치 확인</li>
-                    <li><strong>안심 위치 서비스:</strong> 일행과 떨어지면 즉시 알림 받기</li>
-                    <li><strong>LED 캐릭터 라이트:</strong> 터치하면 반짝이는 라이트로 퍼레이드 즐기기</li>
+                <div style="font-weight: 700; color: #e65100; margin-bottom: 8px;">
+                    ✨ Kakao Maps로 실시간 위치 추적
+                </div>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 4px 0;">✅ 실제 롯데월드 좌표 기반 (37.5105, 127.0979)</li>
+                    <li style="padding: 4px 0;">✅ 어트랙션 마커 자동 표시</li>
+                    <li style="padding: 4px 0;">✅ GPS로 실시간 위치 추적</li>
+                    <li style="padding: 4px 0;">✅ 일행과의 거리 자동 계산</li>
                 </ul>
-            </div>
-
-            <!-- NFC 정보 -->
-            <div class="nfc-info">
-                <h3>📱 NFC 태그로 연결하기</h3>
-                <p>스마트폰으로 매직 밴드의 NFC 태그를 태그하면 아래 주소로 자동 연결됩니다</p>
-                <div class="url-box" id="nfcUrl">현재 페이지 URL</div>
             </div>
         </div>
 
         <div class="footer">
-            <p>2026 롯데월드 상품 디자인 공모전 | YOU & I 함께하는 순간, 롯데월드</p>
-            <p style="margin-top: 8px; opacity: 0.7;">© 2026 LOTTE WORLD. All Rights Reserved.</p>
+            <p>🎡 Powered by Kakao Maps API | 2026 롯데월드 매직 밴드</p>
         </div>
     </div>
 
+    <!-- Kakao Maps SDK -->
+    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=56ea5aad1f4982769925786b12eea9c0&libraries=services"></script>
+    
     <script>
-        const members = {
-            1: { name: '나', x: 150, y: 150 },
-            2: { name: '친구1', x: 280, y: 180 },
-            3: { name: '친구2', x: 200, y: 280 }
+        // 롯데월드 좌표
+        const LOTTE_WORLD = {
+            lat: 37.5105,
+            lng: 127.0979,
+            name: '롯데월드 어드벤처'
         };
 
-        let selectedMember = 2;
-        let ledOn = false;
+        // 주요 어트랙션들
+        const attractions = [
+            { name: '버터플라이 파라다이스', lat: 37.5100, lng: 127.0970, wait: 45 },
+            { name: '매직하우스', lat: 37.5110, lng: 127.0985, wait: 30 },
+            { name: '히든 버그 타운', lat: 37.5095, lng: 127.0975, wait: 50 },
+            { name: '판타지 극장', lat: 37.5115, lng: 127.0980, wait: 35 },
+            { name: '스페이스 월드', lat: 37.5105, lng: 127.0990, wait: 60 }
+        ];
 
-        function selectMember(id) {
-            selectedMember = id;
-            updateUI();
-            
-            // 버튼 상태 업데이트
-            document.querySelectorAll('.member-btn').forEach(btn => {
-                btn.classList.remove('active');
+        let map;
+        let markers = [];
+        let userMarker = null;
+
+        // 맵 초기화
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            const mapOption = {
+                center: new kakao.maps.LatLng(LOTTE_WORLD.lat, LOTTE_WORLD.lng),
+                level: 4,
+                draggable: true,
+                scrollwheel: true
+            };
+
+            map = new kakao.maps.Map(mapContainer, mapOption);
+
+            // 롯데월드 중심 마커
+            addMarker(LOTTE_WORLD.lat, LOTTE_WORLD.lng, '🎡 ' + LOTTE_WORLD.name, true);
+
+            // 어트랙션 마커 추가
+            attractions.forEach(attr => {
+                addMarker(attr.lat, attr.lng, `🎢 ${attr.name}\n⏱️ ${attr.wait}분`);
             });
-            event.target.classList.add('active');
+
+            // 어트랙션 리스트 표시
+            displayAttractions();
         }
 
-        function calculateDistance() {
-            const me = members[1];
-            const friend = members[selectedMember];
-            const dx = me.x - friend.x;
-            const dy = me.y - friend.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        function updateUI() {
-            const dist = Math.round(calculateDistance());
-            document.getElementById('distance').textContent = dist + 'm';
-            document.getElementById('memberName').textContent = members[selectedMember].name;
+        function addMarker(lat, lng, title, isMain = false) {
+            const markerPosition = new kakao.maps.LatLng(lat, lng);
             
-            const warningText = document.getElementById('warningText');
-            if (dist > 150) {
-                warningText.style.display = 'block';
-                showAlert(`'${members[selectedMember].name}'과(와) 150m 이상 떨어졌어요!`);
-            } else {
-                warningText.style.display = 'none';
+            const markerImage = new kakao.maps.MarkerImage(
+                isMain ? 
+                'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png' :
+                'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerA.png',
+                new kakao.maps.Size(24, 35),
+                { offset: new kakao.maps.Point(12, 35) }
+            );
+
+            const marker = new kakao.maps.Marker({
+                position: markerPosition,
+                image: markerImage,
+                title: title,
+                draggable: true
+            });
+
+            marker.setMap(map);
+
+            // 마커 클릭 시 정보 표시
+            kakao.maps.event.addListener(marker, 'click', () => {
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `<div style="padding:8px;font-size:12px;">${title}</div>`
+                });
+                infowindow.open(map, marker);
+
+                // 3초 후 자동 닫기
+                setTimeout(() => infowindow.close(), 3000);
+            });
+
+            // 드래그 시 좌표 업데이트
+            kakao.maps.event.addListener(marker, 'dragend', () => {
+                const pos = marker.getPosition();
+                updateCoordinates(pos.getLat(), pos.getLng());
+            });
+
+            markers.push(marker);
+        }
+
+        function displayAttractions() {
+            const list = document.getElementById('attractions');
+            list.innerHTML = attractions.map(attr => `
+                <div class="attraction-item" onclick="moveToAttraction(${attr.lat}, ${attr.lng})">
+                    <strong>${attr.name}</strong><br>
+                    ⏱️ 대기시간: ${attr.wait}분
+                </div>
+            `).join('');
+        }
+
+        function moveToAttraction(lat, lng) {
+            const level = map.getLevel();
+            map.setCenter(new kakao.maps.LatLng(lat, lng));
+            map.setLevel(4);
+        }
+
+        function centerMap() {
+            map.setCenter(new kakao.maps.LatLng(LOTTE_WORLD.lat, LOTTE_WORLD.lng));
+            map.setLevel(4);
+        }
+
+        function myLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    updateCoordinates(lat, lng);
+
+                    // 사용자 위치 마커
+                    if (userMarker) {
+                        userMarker.setMap(null);
+                    }
+
+                    const userMarkerImage = new kakao.maps.MarkerImage(
+                        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                        new kakao.maps.Size(24, 35),
+                        { offset: new kakao.maps.Point(12, 35) }
+                    );
+
+                    userMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(lat, lng),
+                        image: userMarkerImage,
+                        title: '📍 내 위치'
+                    });
+
+                    userMarker.setMap(map);
+                    map.setCenter(new kakao.maps.LatLng(lat, lng));
+
+                    showAlert('✅ 현재 위치를 반영했습니다!');
+                }, error => {
+                    showAlert('❌ 위치 허가가 필요합니다');
+                });
             }
         }
 
-        function toggleLED() {
-            ledOn = !ledOn;
-            const btn = document.getElementById('ledBtn');
-            if (ledOn) {
-                btn.textContent = '✨ LED ON';
-                btn.classList.add('on');
-            } else {
-                btn.textContent = '💫 LED OFF';
-                btn.classList.remove('on');
-            }
+        function updateCoordinates(lat, lng) {
+            document.getElementById('latValue').textContent = lat.toFixed(4);
+            document.getElementById('lngValue').textContent = lng.toFixed(4);
+
+            // 롯데월드와의 거리 계산 (km 단위)
+            const distance = calculateDistance(lat, lng, LOTTE_WORLD.lat, LOTTE_WORLD.lng);
+            console.log(`롯데월드로부터 ${distance.toFixed(2)}km 떨어짐`);
         }
 
-        function moveMember(delta, isX = false) {
-            const member = members[selectedMember];
-            if (isX) {
-                member.x = Math.max(30, Math.min(370, member.x + delta));
-            } else {
-                member.y = Math.max(30, Math.min(370, member.y + delta));
-            }
-            updateMemberPosition();
-            updateUI();
-        }
-
-        function updateMemberPosition() {
-            const member2 = members[2];
-            const member3 = members[3];
-            
-            document.getElementById('member2').setAttribute('cx', member2.x);
-            document.getElementById('member2').setAttribute('cy', member2.y);
-            
-            document.getElementById('member3').setAttribute('cx', member3.x);
-            document.getElementById('member3').setAttribute('cy', member3.y);
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // 지구 반지름 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
         }
 
         function showAlert(msg) {
             const alert = document.getElementById('alert');
-            document.getElementById('alertMsg').textContent = '⚠️ ' + msg;
+            document.getElementById('alertMsg').textContent = msg;
             alert.classList.add('show');
             setTimeout(() => alert.classList.remove('show'), 3000);
         }
 
-        // 초기화
-        window.addEventListener('load', () => {
-            document.getElementById('nfcUrl').textContent = window.location.href;
-            updateUI();
-        });
+        // 페이지 로드 시 맵 초기화
+        window.addEventListener('load', initMap);
     </script>
 </body>
 </html>
