@@ -121,8 +121,11 @@
             cursor: crosshair;
         }
 
-        #map.normal-cursor {
-            cursor: default;
+        #meetingMapPreview {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            border: 2px solid #81c784;
         }
 
         .form-group {
@@ -371,12 +374,29 @@
             background: #e8f5e9;
             border: 2px solid #81c784;
             border-radius: 8px;
-            padding: 12px;
+            padding: 16px;
             margin-bottom: 12px;
         }
 
         .meeting-point-set strong {
             color: #2e7d32;
+            font-size: 16px;
+        }
+
+        .meeting-info {
+            font-size: 12px;
+            color: #2e7d32;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .meeting-info-item {
+            margin: 4px 0;
+        }
+
+        .meeting-info-item strong {
+            display: inline-block;
+            min-width: 60px;
         }
 
         .my-name-display {
@@ -579,6 +599,7 @@
         let meetingMarker = null;
         let pendingRequest = null;
         let isMapSelectMode = false;
+        let meetingPreviewMap = null;
 
         function initMap() {
             map = L.map('map').setView([LOTTE_WORLD.lat, LOTTE_WORLD.lng], 16);
@@ -665,15 +686,44 @@
                 map.removeLayer(meetingMarker);
             }
 
+            // 메인 지도에 마커 추가
             meetingMarker = L.marker([lat, lng], {
-                title: meetingPoint.name
+                title: meetingPoint.name,
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
             }).addTo(map)
-            .bindPopup(`<strong>📍 ${name}</strong>`);
+            .bindPopup(`<strong>📍 ${name}</strong><br>위도: ${lat.toFixed(4)}<br>경도: ${lng.toFixed(4)}`);
 
-            document.getElementById('meetingDisplay').innerHTML = 
-                `<div class="meeting-point-set">✓ 모임 장소: <strong>${name}</strong><br>위도: ${lat.toFixed(4)}, 경도: ${lng.toFixed(4)}</div>`;
+            // 메인 지도를 모임 장소로 이동
+            map.setView([lat, lng], 17);
 
-            map.setView([lat, lng], 16);
+            // 모임 장소 정보 표시
+            const distance = calculateDistance(myLocation.lat, myLocation.lng, lat, lng);
+            
+            document.getElementById('meetingDisplay').innerHTML = `
+                <div class="meeting-point-set">
+                    <strong>📍 ${name}</strong>
+                    <div class="meeting-info">
+                        <div class="meeting-info-item"><strong>위치:</strong> 위도 ${lat.toFixed(4)}, 경도 ${lng.toFixed(4)}</div>
+                        <div class="meeting-info-item"><strong>내 위치에서:</strong> ${distance.toFixed(2)}km</div>
+                    </div>
+                </div>
+                <div id="meetingMapPreviewContainer" style="margin-top: 12px;">
+                    <div style="font-size: 12px; font-weight: 600; color: #2e7d32; margin-bottom: 8px;">📍 모임 장소 위치</div>
+                    <div id="meetingMapPreview" style="height: 200px; border-radius: 8px; border: 2px solid #81c784;"></div>
+                </div>
+            `;
+
+            // 모임 장소 미리보기 지도
+            setTimeout(() => {
+                initMeetingPreviewMap(lat, lng);
+            }, 100);
 
             // 모달 닫기
             isMapSelectMode = false;
@@ -682,6 +732,49 @@
             document.getElementById('tempMapContainer').style.display = 'none';
 
             showAlert(`✅ 모임 장소 '${name}'가 설정되었습니다`, 'success');
+        }
+
+        function initMeetingPreviewMap(lat, lng) {
+            const container = document.getElementById('meetingMapPreview');
+            
+            if (meetingPreviewMap) {
+                meetingPreviewMap.remove();
+            }
+
+            meetingPreviewMap = L.map(container).setView([lat, lng], 18);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(meetingPreviewMap);
+
+            // 모임 장소 마커
+            L.marker([lat, lng], {
+                title: meetingPoint.name,
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            }).addTo(meetingPreviewMap)
+            .bindPopup(`<strong>📍 ${meetingPoint.name}</strong>`)
+            .openPopup();
+
+            // 내 위치도 표시
+            L.circleMarker([myLocation.lat, myLocation.lng], {
+                radius: 8,
+                fillColor: '#ff4444',
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(meetingPreviewMap)
+            .bindPopup('<strong>📍 내 위치</strong>');
+
+            meetingPreviewMap.invalidateSize();
         }
 
         function setMyName() {
@@ -846,6 +939,14 @@
                 map.setView([myLocation.lat, myLocation.lng], 16);
 
                 displayMembers();
+                
+                // 모임 장소가 설정되어 있으면 미리보기도 업데이트
+                if (meetingPoint) {
+                    const distance = calculateDistance(myLocation.lat, myLocation.lng, meetingPoint.lat, meetingPoint.lng);
+                    document.querySelector('.meeting-info-item:nth-child(2)').innerHTML = 
+                        `<strong>내 위치에서:</strong> ${distance.toFixed(2)}km`;
+                }
+
                 showAlert('✅ 내 위치를 업데이트했습니다', 'success');
             }, error => {
                 showAlert('❌ 위치 허가가 필요합니다', 'error');
@@ -935,10 +1036,34 @@
             const savedMeeting = localStorage.getItem('meetingPoint');
             if (savedMeeting) {
                 meetingPoint = JSON.parse(savedMeeting);
-                document.getElementById('meetingDisplay').innerHTML = 
-                    `<div class="meeting-point-set">✓ 모임 장소: <strong>${meetingPoint.name}</strong><br>위도: ${meetingPoint.lat.toFixed(4)}, 경도: ${meetingPoint.lng.toFixed(4)}</div>`;
-                meetingMarker = L.marker([meetingPoint.lat, meetingPoint.lng]).addTo(map)
-                    .bindPopup(`<strong>📍 ${meetingPoint.name}</strong>`);
+                const distance = calculateDistance(myLocation.lat, myLocation.lng, meetingPoint.lat, meetingPoint.lng);
+                
+                document.getElementById('meetingDisplay').innerHTML = `
+                    <div class="meeting-point-set">
+                        <strong>📍 ${meetingPoint.name}</strong>
+                        <div class="meeting-info">
+                            <div class="meeting-info-item"><strong>위치:</strong> 위도 ${meetingPoint.lat.toFixed(4)}, 경도 ${meetingPoint.lng.toFixed(4)}</div>
+                            <div class="meeting-info-item"><strong>내 위치에서:</strong> ${distance.toFixed(2)}km</div>
+                        </div>
+                    </div>
+                    <div id="meetingMapPreviewContainer" style="margin-top: 12px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #2e7d32; margin-bottom: 8px;">📍 모임 장소 위치</div>
+                        <div id="meetingMapPreview" style="height: 200px; border-radius: 8px; border: 2px solid #81c784;"></div>
+                    </div>
+                `;
+                
+                meetingMarker = L.marker([meetingPoint.lat, meetingPoint.lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map).bindPopup(`<strong>📍 ${meetingPoint.name}</strong>`);
+
+                setTimeout(() => initMeetingPreviewMap(meetingPoint.lat, meetingPoint.lng), 100);
             }
         }
 
