@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>롯데월드 매직 밴드 - 실제 맵 연동</title>
+    <title>롯데월드 매직 밴드 - 스마트 위치 추적</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
         * {
@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 16px;
@@ -41,13 +41,47 @@
             font-weight: 700;
         }
 
-        .header p {
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #eee;
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
             font-size: 13px;
-            opacity: 0.95;
+            font-weight: 600;
+            color: #666;
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: #efefef;
+        }
+
+        .tab.active {
+            background: white;
+            color: #ff4444;
+            border-bottom: 3px solid #ff4444;
         }
 
         .content {
-            padding: 30px 20px;
+            padding: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .grid {
@@ -84,21 +118,38 @@
             height: 400px;
             border-radius: 8px;
             border: 2px solid #ddd;
+            cursor: crosshair;
         }
 
-        .info-section {
-            background: #e3f2fd;
-            border: 2px solid #90caf9;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
+        #map.normal-cursor {
+            cursor: default;
         }
 
-        .info-label {
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
             font-size: 12px;
-            font-weight: 700;
-            color: #1565c0;
-            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ff4444;
+            background: #fff5f5;
         }
 
         .button-group {
@@ -126,125 +177,104 @@
             transform: translateY(-2px);
         }
 
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            flex: none;
-        }
-
-        .btn-danger {
-            border-color: #d32f2f;
-            color: #d32f2f;
-            background: #ffebee;
-        }
-
-        .btn-danger:hover {
-            background: #d32f2f;
+        .btn.active {
+            background: #ff4444;
             color: white;
         }
 
-        .form-group {
-            margin-bottom: 12px;
+        .btn-secondary {
+            border-color: #1565c0;
+            color: #1565c0;
+            background: #e3f2fd;
         }
 
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
+        .btn-secondary:hover {
+            background: #1565c0;
+            color: white;
         }
 
-        .form-group input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: inherit;
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+            flex: none;
         }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #ff4444;
-            background: #fff5f5;
-        }
-
-        .members-list {
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .member-item {
-            background: white;
-            padding: 12px;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
             align-items: center;
         }
 
-        .member-info {
-            flex: 1;
+        .modal.show {
+            display: flex;
         }
 
-        .member-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
 
-        .member-distance {
-            font-size: 12px;
-            color: #1565c0;
-            margin-top: 4px;
-        }
-
-        .member-item button {
-            background: none;
-            border: none;
-            color: #d32f2f;
-            cursor: pointer;
+        .modal-title {
             font-size: 18px;
-            padding: 4px 8px;
-            transition: all 0.2s;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #333;
         }
 
-        .member-item button:hover {
-            transform: scale(1.2);
+        .modal-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
 
-        .features {
-            background: #fff3e0;
-            border: 2px solid #ffb74d;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
             font-size: 13px;
         }
 
-        .footer {
-            background: #f5f5f5;
-            padding: 16px;
-            text-align: center;
-            border-top: 1px solid #eee;
-            font-size: 11px;
-            color: #666;
+        .modal-buttons button.accept {
+            border-color: #28a745;
+            color: #28a745;
+            background: #d4edda;
         }
 
-        .my-location-info {
-            background: #f0f8ff;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 4px solid #ff4444;
-            margin-bottom: 12px;
-            font-size: 12px;
+        .modal-buttons button.accept:hover {
+            background: #28a745;
+            color: white;
         }
 
-        .my-location-info strong {
-            color: #ff4444;
+        .modal-buttons button.reject {
+            border-color: #dc3545;
+            color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .modal-buttons button.reject:hover {
+            background: #dc3545;
+            color: white;
         }
 
         .alert {
@@ -257,16 +287,130 @@
             color: #856404;
         }
 
-        .success {
+        .alert.success {
             background: #d4edda;
             border-color: #28a745;
             color: #155724;
         }
 
-        .error {
+        .alert.error {
             background: #f8d7da;
             border-color: #f5c6cb;
             color: #721c24;
+        }
+
+        .list-item {
+            background: white;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item-info {
+            flex: 1;
+        }
+
+        .list-item-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .list-item-detail {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .list-item button {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            transition: all 0.2s;
+        }
+
+        .list-item button:hover {
+            transform: scale(1.2);
+        }
+
+        .attraction-item {
+            background: white;
+            padding: 16px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .attraction-name {
+            font-weight: 700;
+            color: #ff4444;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .attraction-wait {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1565c0;
+            margin: 8px 0;
+        }
+
+        .attraction-status {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .meeting-point-set {
+            background: #e8f5e9;
+            border: 2px solid #81c784;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .meeting-point-set strong {
+            color: #2e7d32;
+        }
+
+        .my-name-display {
+            background: #e3f2fd;
+            border: 2px solid #90caf9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #1565c0;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 16px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .nearby-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .map-hint {
+            background: #fff9e6;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #f57f17;
         }
     </style>
 </head>
@@ -274,65 +418,126 @@
     <div class="container">
         <div class="header">
             <h1>🎡 롯데월드 매직 밴드</h1>
-            <p>실시간 일행 위치 추적 및 어트랙션 안내</p>
+            <p>NFC 인증 및 실시간 일행 추적</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('tracking')">📍 위치 추적</button>
+            <button class="tab" onclick="switchTab('attractions')">🎢 어트랙션</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ 설정</button>
         </div>
 
         <div class="content">
             <div id="alert"></div>
 
-            <div class="grid">
-                <!-- 실제 지도 -->
-                <div class="card">
-                    <div class="card-title">🗺️ 실시간 롯데월드 맵</div>
-                    <div id="map"></div>
-                    <div class="button-group">
-                        <button class="btn" onclick="centerMap()">📍 중심</button>
-                        <button class="btn" onclick="updateMyLocation()">🧭 내 위치</button>
-                        <button class="btn" onclick="toggleAutoUpdate()">🔄 자동 <span id="autoStatus">OFF</span></button>
-                    </div>
-                </div>
-
-                <!-- 일행 관리 패널 -->
-                <div>
-                    <!-- 내 위치 정보 -->
+            <!-- 위치 추적 탭 -->
+            <div id="tracking" class="tab-content active">
+                <div class="grid">
+                    <!-- 지도 -->
                     <div class="card">
-                        <div class="card-title">📍 내 위치</div>
-                        <div class="my-location-info">
-                            위도: <strong id="myLat">37.5105</strong><br>
-                            경도: <strong id="myLng">127.0979</strong>
+                        <div class="card-title">🗺️ 실시간 위치 맵</div>
+                        <div id="map"></div>
+                        <div class="button-group">
+                            <button class="btn" onclick="centerMap()">📍 중심</button>
+                            <button class="btn" onclick="updateMyLocation()">🧭 내 위치</button>
+                            <button class="btn" onclick="toggleAutoUpdate()">🔄 자동 <span id="autoStatus">OFF</span></button>
                         </div>
+                    </div>
 
-                        <!-- 일행 추가 -->
-                        <div class="card-title" style="margin-top: 16px;">➕ 일행 추가</div>
-                        <div class="form-group">
-                            <label>일행 이름</label>
-                            <input type="text" id="memberName" placeholder="예: 엄마, 친구1" />
+                    <!-- 일행 관리 -->
+                    <div>
+                        <!-- 내 이름 설정 -->
+                        <div class="card">
+                            <div class="card-title">📱 내 이름 (NFC)</div>
+                            <div id="myNameDisplay" class="my-name-display">미설정</div>
+                            <div class="form-group">
+                                <input type="text" id="myName" placeholder="이름을 입력하세요" />
+                            </div>
+                            <button class="btn" onclick="setMyName()">이름 저장 (NFC)</button>
+
+                            <!-- 주변 매직밴드 스캔 -->
+                            <div class="card-title" style="margin-top: 16px;">🔍 주변 매직밴드</div>
+                            <button class="btn btn-secondary" onclick="scanNearby()">📡 스캔 시작</button>
+                            <div class="nearby-list" id="nearbyList" style="margin-top: 12px;"></div>
+
+                            <!-- 일행 목록 -->
+                            <div class="card-title" style="margin-top: 16px;">👥 일행 (<span id="memberCount">0</span>)</div>
+                            <div id="membersList" style="max-height: 200px; overflow-y: auto;"></div>
                         </div>
-                        <button class="btn" onclick="addMember()">추가하기</button>
-
-                        <!-- 일행 목록 -->
-                        <div class="card-title" style="margin-top: 16px;">👥 일행 목록 (<span id="memberCount">0</span>)</div>
-                        <div class="members-list" id="membersList"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 주요 기능 -->
-            <div class="features">
-                <div style="font-weight: 700; color: #e65100; margin-bottom: 8px;">
-                    ✨ 실시간 일행 위치 추적
+            <!-- 어트랙션 탭 -->
+            <div id="attractions" class="tab-content">
+                <div class="grid">
+                    <!-- 모임 장소 설정 -->
+                    <div class="card">
+                        <div class="card-title">📍 모임 장소 설정</div>
+                        <div class="map-hint">
+                            💡 팁: "지도에서 선택" 버튼을 누른 후 지도에서 모임 장소를 클릭하세요!
+                        </div>
+                        <button class="btn" id="mapSelectBtn" onclick="toggleMapSelect()">📌 지도에서 선택</button>
+                        <div id="meetingDisplay" style="margin-top: 12px;"></div>
+                        <div id="tempMapContainer" style="display: none; margin-top: 12px;">
+                            <div id="tempMap" style="height: 250px; border-radius: 8px; border: 2px solid #ddd;"></div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                                🗺️ 지도에서 모임 장소를 클릭하세요
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 어트랙션 대기시간 -->
+                    <div class="card">
+                        <div class="card-title">🎢 어트랙션 대기시간</div>
+                        <div id="attractionsList"></div>
+                    </div>
                 </div>
-                <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 4px 0;">✅ 일행을 등록하고 실시간 위치 확인</li>
-                    <li style="padding: 4px 0;">✅ 내 위치 기반으로 일행과의 거리 자동 계산</li>
-                    <li style="padding: 4px 0;">✅ 자동 위치 업데이트 (위치 공유 설정)</li>
-                    <li style="padding: 4px 0;">✅ 어트랙션 정보 및 대기시간 안내</li>
-                </ul>
+            </div>
+
+            <!-- 설정 탭 -->
+            <div id="settings" class="tab-content">
+                <div class="card" style="max-width: 500px;">
+                    <div class="card-title">⚙️ 설정</div>
+                    
+                    <div class="form-group">
+                        <label>자동 위치 업데이트 간격 (초)</label>
+                        <select id="updateInterval" onchange="saveSettings()">
+                            <option value="10">10초</option>
+                            <option value="20">20초</option>
+                            <option value="30">30초</option>
+                            <option value="60">1분</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" onclick="clearAllData()">모든 데이터 초기화</button>
+                    
+                    <div style="margin-top: 20px; padding: 16px; background: #f5f5f5; border-radius: 8px; font-size: 12px; color: #666;">
+                        <strong>📱 사용 방법:</strong><br>
+                        1. 이름 저장 (NFC)으로 내 이름 등록<br>
+                        2. 📡 스캔으로 주변 매직밴드 찾기<br>
+                        3. 일행 추가 → 상대 확인 대기<br>
+                        4. 어트랙션 대기시간 확인<br>
+                        5. 지도에서 모임 장소 클릭해서 설정
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>🎡 2026 롯데월드 매직 밴드 | 실시간 일행 추적 | Powered by OpenStreetMap</p>
+            <p>🎡 2026 롯데월드 매직 밴드 | NFC 인증 일행 추적 | Powered by OpenStreetMap</p>
+        </div>
+    </div>
+
+    <!-- 요청 수락/거절 모달 -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">👥 일행 추가 요청</div>
+            <div class="modal-message" id="requestMessage"></div>
+            <div class="modal-buttons">
+                <button class="accept" onclick="acceptRequest()">수락</button>
+                <button class="reject" onclick="rejectRequest()">거절</button>
+            </div>
         </div>
     </div>
 
@@ -347,20 +552,33 @@
         };
 
         const attractions = [
-            { name: '버터플라이 파라다이스', lat: 37.5100, lng: 127.0970, wait: 45 },
-            { name: '매직하우스', lat: 37.5110, lng: 127.0985, wait: 30 },
-            { name: '히든 버그 타운', lat: 37.5095, lng: 127.0975, wait: 50 },
-            { name: '판타지 극장', lat: 37.5115, lng: 127.0980, wait: 35 },
-            { name: '스페이스 월드', lat: 37.5105, lng: 127.0990, wait: 60 }
+            { name: '아트란티스', lat: 37.5115, lng: 127.0985, wait: 45 },
+            { name: '자이로스윙', lat: 37.5095, lng: 127.0970, wait: 35 },
+            { name: '후렌치레볼루션', lat: 37.5110, lng: 127.0995, wait: 50 },
+            { name: '혜성특급', lat: 37.5100, lng: 127.0975, wait: 40 },
+            { name: '자이로드롭', lat: 37.5108, lng: 127.0980, wait: 55 }
         ];
 
         const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+        const nearbyDevices = [
+            { name: '김철수', color: '#4ECDC4' },
+            { name: '이영희', color: '#45B7D1' },
+            { name: '박민준', color: '#FFA07A' },
+            { name: '최수진', color: '#98D8C8' }
+        ];
+
         let map;
+        let tempMap;
         let myMarker;
         let memberMarkers = {};
         let members = {};
+        let myName = '';
         let myLocation = { lat: LOTTE_WORLD.lat, lng: LOTTE_WORLD.lng };
         let autoUpdateInterval = null;
+        let meetingPoint = null;
+        let meetingMarker = null;
+        let pendingRequest = null;
+        let isMapSelectMode = false;
 
         function initMap() {
             map = L.map('map').setView([LOTTE_WORLD.lat, LOTTE_WORLD.lng], 16);
@@ -370,13 +588,11 @@
                 maxZoom: 19
             }).addTo(map);
 
-            // 롯데월드 중심점
             L.marker([LOTTE_WORLD.lat, LOTTE_WORLD.lng], {
                 title: '🎡 ' + LOTTE_WORLD.name
             }).addTo(map)
             .bindPopup(`<strong>🎡 ${LOTTE_WORLD.name}</strong>`);
 
-            // 내 위치 마커
             myMarker = L.circleMarker([myLocation.lat, myLocation.lng], {
                 radius: 12,
                 fillColor: '#ff4444',
@@ -387,73 +603,174 @@
             }).addTo(map)
             .bindPopup('<strong>📍 내 위치</strong>');
 
-            loadMembers();
+            loadData();
+            displayAttractions();
         }
 
-        function updateMyLocation() {
-            if (!navigator.geolocation) {
-                showAlert('위치 정보를 지원하지 않습니다', 'error');
-                return;
+        function initTempMap() {
+            const container = document.getElementById('tempMap');
+            if (!tempMap) {
+                tempMap = L.map(container).setView([LOTTE_WORLD.lat, LOTTE_WORLD.lng], 16);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(tempMap);
+
+                L.marker([LOTTE_WORLD.lat, LOTTE_WORLD.lng]).addTo(tempMap)
+                    .bindPopup('🎡 롯데월드');
+
+                tempMap.on('click', function(e) {
+                    const { lat, lng } = e.latlng;
+                    saveMeetingPointFromMap(lat, lng);
+                });
             }
-
-            navigator.geolocation.getCurrentPosition(position => {
-                myLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-
-                document.getElementById('myLat').textContent = myLocation.lat.toFixed(4);
-                document.getElementById('myLng').textContent = myLocation.lng.toFixed(4);
-
-                myMarker.setLatLng([myLocation.lat, myLocation.lng]);
-                map.setView([myLocation.lat, myLocation.lng], 16);
-
-                updateAllDistances();
-                showAlert('✅ 내 위치를 업데이트했습니다', 'success');
-            }, error => {
-                showAlert('❌ 위치 허가가 필요합니다', 'error');
-            });
         }
 
-        function addMember() {
-            const name = document.getElementById('memberName').value.trim();
+        function toggleMapSelect() {
+            const btn = document.getElementById('mapSelectBtn');
+            const container = document.getElementById('tempMapContainer');
+
+            if (!isMapSelectMode) {
+                isMapSelectMode = true;
+                btn.textContent = '✓ 지도 선택 중...';
+                btn.classList.add('active');
+                container.style.display = 'block';
+                setTimeout(() => {
+                    initTempMap();
+                    tempMap.invalidateSize();
+                }, 100);
+                showAlert('📌 지도에서 모임 장소를 클릭하세요', 'success');
+            } else {
+                isMapSelectMode = false;
+                btn.textContent = '📌 지도에서 선택';
+                btn.classList.remove('active');
+                container.style.display = 'none';
+                showAlert('지도 선택 모드를 취소했습니다', 'success');
+            }
+        }
+
+        function saveMeetingPointFromMap(lat, lng) {
+            const name = prompt('모임 장소의 이름을 입력하세요 (예: 매직캐슬 앞)');
             
             if (!name) {
-                showAlert('일행의 이름을 입력하세요', 'error');
+                showAlert('모임 장소 이름을 입력하세요', 'error');
                 return;
             }
 
-            if (members[name]) {
-                showAlert('이미 등록된 일행입니다', 'error');
+            meetingPoint = { name, lat, lng };
+            localStorage.setItem('meetingPoint', JSON.stringify(meetingPoint));
+
+            if (meetingMarker) {
+                map.removeLayer(meetingMarker);
+            }
+
+            meetingMarker = L.marker([lat, lng], {
+                title: meetingPoint.name
+            }).addTo(map)
+            .bindPopup(`<strong>📍 ${name}</strong>`);
+
+            document.getElementById('meetingDisplay').innerHTML = 
+                `<div class="meeting-point-set">✓ 모임 장소: <strong>${name}</strong><br>위도: ${lat.toFixed(4)}, 경도: ${lng.toFixed(4)}</div>`;
+
+            map.setView([lat, lng], 16);
+
+            // 모달 닫기
+            isMapSelectMode = false;
+            document.getElementById('mapSelectBtn').textContent = '📌 지도에서 선택';
+            document.getElementById('mapSelectBtn').classList.remove('active');
+            document.getElementById('tempMapContainer').style.display = 'none';
+
+            showAlert(`✅ 모임 장소 '${name}'가 설정되었습니다`, 'success');
+        }
+
+        function setMyName() {
+            const name = document.getElementById('myName').value.trim();
+            
+            if (!name) {
+                showAlert('이름을 입력하세요', 'error');
                 return;
             }
 
-            // GPS로 일행 위치 수집
-            if (!navigator.geolocation) {
-                showAlert('위치 정보를 지원하지 않습니다', 'error');
+            myName = name;
+            localStorage.setItem('myName', myName);
+            document.getElementById('myNameDisplay').textContent = `✓ ${myName}`;
+            document.getElementById('myName').value = '';
+            showAlert(`✅ NFC 이름이 저장되었습니다: ${myName}`, 'success');
+        }
+
+        function scanNearby() {
+            const list = document.getElementById('nearbyList');
+            list.innerHTML = '<p style="color: #999; font-size: 12px; padding: 12px;">🔍 스캔 중...</p>';
+
+            setTimeout(() => {
+                if (!myName) {
+                    showAlert('먼저 이름을 저장하세요', 'error');
+                    list.innerHTML = '';
+                    return;
+                }
+
+                list.innerHTML = nearbyDevices.map(device => `
+                    <div class="list-item">
+                        <div class="list-item-info">
+                            <div class="list-item-name" style="color: ${device.color};">● ${device.name}</div>
+                            <div class="list-item-detail">NFC 매직밴드</div>
+                        </div>
+                        <button onclick="requestAddMember('${device.name}', '${device.color}')" class="btn-small" style="border: 1px solid #ff4444; background: #fff5f5; color: #ff4444; padding: 6px 12px; border-radius: 4px;">추가</button>
+                    </div>
+                `).join('');
+            }, 1500);
+        }
+
+        function requestAddMember(friendName, friendColor) {
+            if (members[friendName]) {
+                showAlert('이미 일행에 추가되어 있습니다', 'error');
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(position => {
-                const id = Date.now().toString();
-                const colorIdx = Object.keys(members).length % colors.length;
-                
-                members[name] = {
-                    id: id,
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                    color: colors[colorIdx]
-                };
+            pendingRequest = { requester: myName, responder: friendName, color: friendColor };
+            
+            setTimeout(() => {
+                if (pendingRequest && pendingRequest.responder === friendName) {
+                    showRequestModal(friendName);
+                }
+            }, 500);
+        }
 
-                saveMembers();
-                displayMembers();
-                addMemberMarker(name);
-                
-                document.getElementById('memberName').value = '';
-                showAlert(`✅ ${name}을(를) 추가했습니다`, 'success');
-            }, error => {
-                showAlert('❌ 위치 허가가 필요합니다', 'error');
-            });
+        function showRequestModal(friendName) {
+            document.getElementById('requestMessage').textContent = 
+                `'${myName}'님이 일행 추가를 요청하였습니다.\n수락하시겠습니까?`;
+            document.getElementById('requestModal').classList.add('show');
+        }
+
+        function acceptRequest() {
+            if (!pendingRequest) return;
+
+            const { requester, responder, color } = pendingRequest;
+            
+            members[responder] = {
+                id: Date.now().toString(),
+                lat: LOTTE_WORLD.lat + (Math.random() - 0.5) * 0.01,
+                lng: LOTTE_WORLD.lng + (Math.random() - 0.5) * 0.01,
+                color: color
+            };
+
+            saveMembers();
+            displayMembers();
+            addMemberMarker(responder);
+
+            document.getElementById('requestModal').classList.remove('show');
+            showAlert(`✅ ${responder}님이 일행으로 추가되었습니다`, 'success');
+            pendingRequest = null;
+        }
+
+        function rejectRequest() {
+            if (!pendingRequest) return;
+
+            const { responder } = pendingRequest;
+            document.getElementById('requestModal').classList.remove('show');
+            showAlert(`${responder}님의 요청이 거절되었습니다`, 'error');
+            pendingRequest = null;
         }
 
         function addMemberMarker(name) {
@@ -472,21 +789,6 @@
             memberMarkers[name] = marker;
         }
 
-        function removeMember(name) {
-            if (confirm(`${name}을(를) 삭제하시겠습니까?`)) {
-                delete members[name];
-                
-                if (memberMarkers[name]) {
-                    map.removeLayer(memberMarkers[name]);
-                    delete memberMarkers[name];
-                }
-
-                saveMembers();
-                displayMembers();
-                showAlert(`✅ ${name}을(를) 삭제했습니다`, 'success');
-            }
-        }
-
         function displayMembers() {
             const list = document.getElementById('membersList');
             const count = document.getElementById('memberCount');
@@ -502,36 +804,95 @@
                 const distance = calculateDistance(myLocation.lat, myLocation.lng, data.lat, data.lng);
                 
                 return `
-                    <div class="member-item">
-                        <div class="member-info">
-                            <div class="member-name" style="color: ${data.color};">● ${name}</div>
-                            <div class="member-distance">거리: ${distance.toFixed(2)}km</div>
+                    <div class="list-item">
+                        <div class="list-item-info">
+                            <div class="list-item-name" style="color: ${data.color};">● ${name}</div>
+                            <div class="list-item-detail">거리: ${distance.toFixed(2)}km</div>
                         </div>
-                        <button onclick="removeMember('${name}')" title="삭제">✕</button>
+                        <button onclick="removeMember('${name}')" style="color: #d32f2f;">✕</button>
                     </div>
                 `;
             }).join('');
         }
 
-        function updateAllDistances() {
-            displayMembers();
-        }
-
-        function saveMembers() {
-            localStorage.setItem('members', JSON.stringify(members));
-        }
-
-        function loadMembers() {
-            const saved = localStorage.getItem('members');
-            if (saved) {
-                members = JSON.parse(saved);
-                displayMembers();
+        function removeMember(name) {
+            if (confirm(`${name}을(를) 삭제하시겠습니까?`)) {
+                delete members[name];
                 
-                // 기존 마커들 추가
-                Object.keys(members).forEach(name => {
-                    addMemberMarker(name);
-                });
+                if (memberMarkers[name]) {
+                    map.removeLayer(memberMarkers[name]);
+                    delete memberMarkers[name];
+                }
+
+                saveMembers();
+                displayMembers();
+                showAlert(`${name}을(를) 삭제했습니다`, 'success');
             }
+        }
+
+        function updateMyLocation() {
+            if (!navigator.geolocation) {
+                showAlert('위치 정보를 지원하지 않습니다', 'error');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                myLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                myMarker.setLatLng([myLocation.lat, myLocation.lng]);
+                map.setView([myLocation.lat, myLocation.lng], 16);
+
+                displayMembers();
+                showAlert('✅ 내 위치를 업데이트했습니다', 'success');
+            }, error => {
+                showAlert('❌ 위치 허가가 필요합니다', 'error');
+            });
+        }
+
+        function toggleAutoUpdate() {
+            const status = document.getElementById('autoStatus');
+            const interval = parseInt(document.getElementById('updateInterval').value) * 1000;
+
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateInterval = null;
+                status.textContent = 'OFF';
+                status.parentElement.style.background = '#fff5f5';
+                showAlert('자동 위치 업데이트를 중지했습니다', 'success');
+            } else {
+                autoUpdateInterval = setInterval(updateMyLocation, interval);
+                status.textContent = 'ON';
+                status.parentElement.style.background = '#d4edda';
+                updateMyLocation();
+            }
+        }
+
+        function displayAttractions() {
+            const list = document.getElementById('attractionsList');
+            list.innerHTML = attractions.map(attr => `
+                <div class="attraction-item">
+                    <div class="attraction-name">🎢 ${attr.name}</div>
+                    <div class="attraction-wait">${attr.wait}분</div>
+                    <div class="attraction-status">
+                        ${attr.wait <= 30 ? '✅ 빠름' : attr.wait <= 50 ? '⏳ 보통' : '🔴 혼잡'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function centerMap() {
+            map.setView([myLocation.lat, myLocation.lng], 16);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
         }
 
         function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -546,29 +907,6 @@
             return R * c;
         }
 
-        function centerMap() {
-            map.setView([myLocation.lat, myLocation.lng], 16);
-        }
-
-        function toggleAutoUpdate() {
-            const btn = document.getElementById('autoStatus').parentElement;
-            const status = document.getElementById('autoStatus');
-
-            if (autoUpdateInterval) {
-                clearInterval(autoUpdateInterval);
-                autoUpdateInterval = null;
-                status.textContent = 'OFF';
-                status.parentElement.style.background = '#fff5f5';
-                showAlert('자동 위치 업데이트를 중지했습니다', 'success');
-            } else {
-                autoUpdateInterval = setInterval(updateMyLocation, 10000); // 10초마다
-                status.textContent = 'ON';
-                status.parentElement.style.background = '#d4edda';
-                updateMyLocation();
-                showAlert('✅ 자동 위치 업데이트를 시작했습니다 (10초 간격)', 'success');
-            }
-        }
-
         function showAlert(msg, type = 'info') {
             const alertDiv = document.getElementById('alert');
             alertDiv.innerHTML = `<div class="alert ${type}">${msg}</div>`;
@@ -577,7 +915,45 @@
             }, 3000);
         }
 
-        // 로드 시 초기화
+        function saveMembers() {
+            localStorage.setItem('members', JSON.stringify(members));
+        }
+
+        function loadData() {
+            myName = localStorage.getItem('myName') || '';
+            if (myName) {
+                document.getElementById('myNameDisplay').textContent = `✓ ${myName}`;
+            }
+
+            const saved = localStorage.getItem('members');
+            if (saved) {
+                members = JSON.parse(saved);
+                displayMembers();
+                Object.keys(members).forEach(name => addMemberMarker(name));
+            }
+
+            const savedMeeting = localStorage.getItem('meetingPoint');
+            if (savedMeeting) {
+                meetingPoint = JSON.parse(savedMeeting);
+                document.getElementById('meetingDisplay').innerHTML = 
+                    `<div class="meeting-point-set">✓ 모임 장소: <strong>${meetingPoint.name}</strong><br>위도: ${meetingPoint.lat.toFixed(4)}, 경도: ${meetingPoint.lng.toFixed(4)}</div>`;
+                meetingMarker = L.marker([meetingPoint.lat, meetingPoint.lng]).addTo(map)
+                    .bindPopup(`<strong>📍 ${meetingPoint.name}</strong>`);
+            }
+        }
+
+        function saveSettings() {
+            const interval = document.getElementById('updateInterval').value;
+            localStorage.setItem('updateInterval', interval);
+        }
+
+        function clearAllData() {
+            if (confirm('모든 데이터를 초기화하시겠습니까?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         window.addEventListener('load', initMap);
     </script>
 </body>
